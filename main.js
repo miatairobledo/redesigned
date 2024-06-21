@@ -1,7 +1,7 @@
 // Importamos lo necesario para Node.js
-const fetch = require('node-fetch');
+import { fetch } from ('node-fetch');
 const { Headers } = fetch;
-const faker = require('faker');
+import {faker} = from ('faker');
 
 // Constantes comunes para todos los bloques de código
 const upstream = 'api.openai.com';
