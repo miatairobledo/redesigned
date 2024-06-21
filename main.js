@@ -6,7 +6,7 @@ import https from 'https';
 import net from 'net';
 
 const upstream = 'api.openai.com';
-const upstream_path = '';  // Ajustar según la API de OpenAI que se use
+const upstream_path = '/';  // Ajustar según la API de OpenAI que se use
 const upstream_mobile = upstream;
 const httpsProtocol = true;
 const disable_cache = false;
@@ -76,10 +76,6 @@ async function fetchAndApply(request, bypass = false) {
         request_headers.set('User-Agent', user_agent);
         request_headers.set('Geolocation', geolocation);
         request_headers.set('Date', fake_time);
-
-        request_headers.delete('Authorization');
-        request_headers.delete('apikey');
-        request_headers.delete('x-api-key');
 
         const options = {
             method: request.method,
