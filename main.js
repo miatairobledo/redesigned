@@ -2,6 +2,7 @@ import fetch, { Headers, Response } from 'node-fetch';
 import faker from 'faker';
 import http from 'http';
 import { URL } from 'url';
+import https from 'https';
 
 const upstream = 'api.openai.com';
 const upstream_path = '/';
@@ -11,6 +12,8 @@ const disable_cache = false;
 const replace_dict = {
     '$upstream': '$custom_domain'
 };
+
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
 async function device_status(user_agent_info) {
     const agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
@@ -43,7 +46,7 @@ function generateFakeTime() {
     return faker.date.recent().toISOString();
 }
 
-async function fetchAndApply(request) {
+async function fetchAndApply(request, bypass = false) {
     try {
         const ip_address = generateFakeIP();
         const user_agent = generateFakeUserAgent();
@@ -79,7 +82,8 @@ async function fetchAndApply(request) {
 
         const options = {
             method: request.method,
-            headers: request_headers
+            headers: request_headers,
+            agent: insecureAgent
         };
 
         if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -113,6 +117,15 @@ async function fetchAndApply(request) {
         const original_text = content_type?.includes('text/html') && content_type.includes('UTF-8')
             ? await replace_response_text(original_response, upstream_domain, url_hostname)
             : await original_response.text();
+
+        if ((original_text.includes('insufficient_quota') || original_text.includes('rate_limit_exceeded')) && !bypass) {
+            // Retry the request with bypass flag set to true
+            return await fetchAndApply(request, true);
+        }
+
+        if (original_text.includes('A 1xxx error occured.')) {
+            return new Response('Custom Response: A Cloudflare Route Error Occurred', { status: 200, headers: response_headers });
+        }
 
         return new Response(original_text, { status, headers: response_headers });
 
