@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Cambia a la rama principal de tu repositorio
+      - main
 
 jobs:
   deploy:
@@ -19,12 +19,13 @@ jobs:
           # Aquí podrías ejecutar otros comandos necesarios para preparar tu proyecto
 
       - name: Deploy to GitHub Pages
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
           git checkout --orphan gh-pages
           git rm -rf .
           git add .
           git commit -m "Deploy to GitHub Pages"
-          git push -f origin gh-pages
-
+          git push -f https://github.com/${{ github.repository }}.git gh-pages:${{ github.ref_name }}
