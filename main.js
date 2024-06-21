@@ -34,14 +34,14 @@ async function replace_response_text(response, upstream_domain, host_name) {
     for (let i in replace_dict) {
         let j = replace_dict[i];
         let re = new RegExp(i, 'g');
-        if (i == '$upstream') {
+        if (i === '$upstream') {
             text = text.replace(re, upstream_domain);
-        } else if (i == '$custom_domain') {
+        } else if (i === '$custom_domain') {
             text = text.replace(re, host_name);
         }
-        if (j == '$upstream') {
+        if (j === '$upstream') {
             text = text.replace(re, upstream_domain);
-        } else if (j == '$custom_domain') {
+        } else if (j === '$custom_domain') {
             text = text.replace(re, host_name);
         }
     }
@@ -85,7 +85,7 @@ async function fetchAndApply(request) {
             let request_headers = new Headers(request.headers);
             
             request_headers.set('Host', upstream_domain);
-            request_headers.set('Referer', url.protocol + '//' + url_hostname);
+            request_headers.set('Referer', `${url.protocol}//${url_hostname}`);
             
             let original_response = await fetch(url.href, {
                 method: method,
@@ -94,7 +94,7 @@ async function fetchAndApply(request) {
             });
             
             let connection_upgrade = request_headers.get("Upgrade");
-            if (connection_upgrade && connection_upgrade.toLowerCase() == "websocket") {
+            if (connection_upgrade && connection_upgrade.toLowerCase() === "websocket") {
                 return original_response;
             }
             
@@ -115,7 +115,7 @@ async function fetchAndApply(request) {
             new_response_headers.delete('clear-site-data');
             
             if (new_response_headers.get("x-pjax-url")) {
-                new_response_headers.set("x-pjax-url", response_headers.get("x-pjax-url").replace("//" + upstream_domain, "//" + url_hostname));
+                new_response_headers.set("x-pjax-url", response_headers.get("x-pjax-url").replace(`//${upstream_domain}`, `//${url_hostname}`));
             }
             
             const content_type = new_response_headers.get('content-type');
