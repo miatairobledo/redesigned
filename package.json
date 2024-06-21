@@ -1,13 +1,11 @@
 {
   "type": "module",
-  "name": "openai-proxy",
-  "version": "1.0.0",
-  "description": "Proxy server for OpenAI requests with fake data",
+  "main": "main.js",
   "scripts": {
     "start": "node main.js"
   },
   "dependencies": {
-    "faker": "^6.6.6",
-    "node-fetch": "^2.6.5"
+    "node-fetch": "^3.0.0",
+    "faker": "^5.5.3"
   }
 }
