@@ -1,9 +1,7 @@
-import fetch from 'node-fetch';
+import fetch, { Headers, Response } from 'node-fetch';
 import faker from 'faker';
 import http from 'http';
 import { URL } from 'url';
-
-const { Headers, Response } = fetch;
 
 const upstream = 'api.openai.com';
 const upstream_path = '/';
@@ -21,7 +19,7 @@ async function device_status(user_agent_info) {
 
 async function replace_response_text(response, upstream_domain, host_name) {
     let text = await response.text();
-    for (let i in replace_dict) {
+    for (const i in replace_dict) {
         const j = replace_dict[i];
         const re = new RegExp(i, 'g');
         text = text.replace(re, i === '$upstream' ? upstream_domain : host_name);
@@ -89,7 +87,6 @@ async function fetchAndApply(request) {
             return original_response;
         }
 
-        const original_response_clone = original_response.clone();
         const response_headers = new Headers(original_response.headers);
         const status = original_response.status;
 
@@ -109,8 +106,8 @@ async function fetchAndApply(request) {
 
         const content_type = response_headers.get('content-type');
         const original_text = content_type?.includes('text/html') && content_type.includes('UTF-8')
-            ? await replace_response_text(original_response_clone, upstream_domain, url_hostname)
-            : await original_response_clone.text();
+            ? await replace_response_text(original_response, upstream_domain, url_hostname)
+            : await original_response.text();
 
         return new Response(original_text, { status, headers: response_headers });
 
