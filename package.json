@@ -1,9 +1,9 @@
 {
   "name": "openai-proxy",
   "version": "1.0.0",
-  "type": "module",
   "description": "Proxy server for OpenAI requests with fake data",
   "main": "main.js",
+  "type": "module", // Aquí se especifica el tipo de módulo ES
   "scripts": {
     "start": "node main.js"
   },
