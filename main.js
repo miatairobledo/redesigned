@@ -88,11 +88,11 @@ async function fetchAndApply(request) {
         request_headers.set('Referer', `${url.protocol}//${url_hostname}`);
         request_headers.set('cf-ipcountry', region);
         request_headers.set('cf-connecting-ip', ip_address);
-            
+        
         request_headers.delete('Authorization');
         request_headers.delete('apikey');
         request_headers.delete('x-api-key');
-                    
+        
         let original_response = await fetch(url.href, {
             method: method,
             headers: request_headers,
@@ -143,8 +143,5 @@ async function fetchAndApply(request) {
     }
 }
 
-addEventListener('fetch', event => {
-    event.respondWith(fetchAndApply(event.request));
-});
 
 export { fetchAndApply };
