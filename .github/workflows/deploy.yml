@@ -6,7 +6,7 @@ on:
       - main  # Cambia a la rama principal de tu repositorio
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,16 +16,10 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          # Aquí podrías ejecutar otros comandos necesarios para preparar tu proyecto
 
+  
       - name: Deploy to GitHub Pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git checkout --orphan gh-pages
-          git rm -rf .
-          git add .
-          git commit -m "Deploy to GitHub Pages"
-          git push -f https://github.com/${{ github.repository }}.git gh-pages:${{ github.ref_name }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # Ajusta esto según la salida de tu build
