@@ -3,6 +3,7 @@ import faker from 'faker';
 import http from 'http';
 import { URL } from 'url';
 import https from 'https';
+import net from 'net';
 
 const upstream = 'api.openai.com';
 const upstream_path = '/';  // Ajustar según la API de OpenAI que se use
@@ -122,7 +123,11 @@ async function fetchAndApply(request, bypass = false) {
             original_text = await original_response.text();
         }
 
-        if ((original_text.includes('insufficient_quota') || original_text.includes('rate_limit_exceeded')) && !bypass) {
+        // Manejo de errores específicos con bypass
+        if ((original_text.includes('insufficient_quota') || 
+             original_text.includes('rate_limit_exceeded') || 
+             original_text.includes('invalid_request_error') || 
+             original_text.includes('You didn\'t provide an API key')) && !bypass) {
             // Retry the request with bypass flag set to true
             return await fetchAndApply(request, true);
         }
