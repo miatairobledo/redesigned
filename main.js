@@ -3,7 +3,7 @@ import faker from 'faker';
 import http from 'http';
 import { URL } from 'url';
 
-const { Headers } = fetch;
+const { Headers, Response } = fetch;
 
 const upstream = 'api.openai.com';
 const upstream_path = '/';
@@ -15,32 +15,16 @@ const replace_dict = {
 };
 
 async function device_status(user_agent_info) {
-    var agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
-    var flag = true;
-    for (var v = 0; v < agents.length; v++) {
-        if (user_agent_info.indexOf(agents[v]) > 0) {
-            flag = false;
-            break;
-        }
-    }
-    return flag;
+    const agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
+    return !agents.some(agent => user_agent_info.includes(agent));
 }
 
 async function replace_response_text(response, upstream_domain, host_name) {
     let text = await response.text();
     for (let i in replace_dict) {
-        let j = replace_dict[i];
-        let re = new RegExp(i, 'g');
-        if (i === '$upstream') {
-            text = text.replace(re, upstream_domain);
-        } else if (i === '$custom_domain') {
-            text = text.replace(re, host_name);
-        }
-        if (j === '$upstream') {
-            text = text.replace(re, upstream_domain);
-        } else if (j === '$custom_domain') {
-            text = text.replace(re, host_name);
-        }
+        const j = replace_dict[i];
+        const re = new RegExp(i, 'g');
+        text = text.replace(re, i === '$upstream' ? upstream_domain : host_name);
     }
     return text;
 }
@@ -69,22 +53,19 @@ async function fetchAndApply(request) {
         const geolocation = generateFakeGeolocation();
         const fake_time = generateFakeTime();
 
-        let url = new URL(request.url, `http://${request.headers.host}`);
-        let url_hostname = url.hostname;
+        const url = new URL(request.url, `http://${request.headers.host}`);
+        const url_hostname = url.hostname;
 
-        if (httpsProtocol) {
-            url.protocol = 'https:';
-        } else {
-            url.protocol = 'http:';
-        }
-
+        url.protocol = httpsProtocol ? 'https:' : 'http:';
         const upstream_domain = await device_status(user_agent) ? upstream : upstream_mobile;
 
         url.host = upstream_domain;
         url.pathname = upstream_path + url.pathname;
 
-        let method = request.method;
-        let request_headers = new Headers(request.headers);
+        const request_headers = new Headers();
+        for (const [key, value] of Object.entries(request.headers)) {
+            request_headers.append(key, value);
+        }
 
         request_headers.set('Host', upstream_domain);
         request_headers.set('Referer', `${url.protocol}//${url_hostname}`);
@@ -98,48 +79,40 @@ async function fetchAndApply(request) {
         request_headers.delete('apikey');
         request_headers.delete('x-api-key');
 
-        let original_response = await fetch(url.href, {
-            method: method,
+        const original_response = await fetch(url.href, {
+            method: request.method,
             headers: request_headers,
-            body: request.body // Use request.body to forward the original request body
+            body: request.body
         });
 
-        let connection_upgrade = request_headers.get("Upgrade");
-        if (connection_upgrade && connection_upgrade.toLowerCase() === "websocket") {
+        if (request_headers.get("Upgrade")?.toLowerCase() === "websocket") {
             return original_response;
         }
 
-        let original_response_clone = original_response.clone();
-        let original_text = null;
-        let response_headers = original_response.headers;
-        let new_response_headers = new Headers(response_headers);
-        let status = original_response.status;
+        const original_response_clone = original_response.clone();
+        const response_headers = new Headers(original_response.headers);
+        const status = original_response.status;
 
         if (disable_cache) {
-            new_response_headers.set('Cache-Control', 'no-store');
+            response_headers.set('Cache-Control', 'no-store');
         }
 
-        new_response_headers.set('access-control-allow-origin', '*');
-        new_response_headers.set('access-control-allow-credentials', 'true');
-        new_response_headers.delete('content-security-policy');
-        new_response_headers.delete('content-security-policy-report-only');
-        new_response_headers.delete('clear-site-data');
+        response_headers.set('access-control-allow-origin', '*');
+        response_headers.set('access-control-allow-credentials', 'true');
+        response_headers.delete('content-security-policy');
+        response_headers.delete('content-security-policy-report-only');
+        response_headers.delete('clear-site-data');
 
-        if (new_response_headers.get("x-pjax-url")) {
-            new_response_headers.set("x-pjax-url", response_headers.get("x-pjax-url").replace(`//${upstream_domain}`, `//${url_hostname}`));
+        if (response_headers.get("x-pjax-url")) {
+            response_headers.set("x-pjax-url", response_headers.get("x-pjax-url").replace(`//${upstream_domain}`, `//${url_hostname}`));
         }
 
-        const content_type = new_response_headers.get('content-type');
-        if (content_type != null && content_type.includes('text/html') && content_type.includes('UTF-8')) {
-            original_text = await replace_response_text(original_response_clone, upstream_domain, url_hostname);
-        } else {
-            original_text = await original_response_clone.text();
-        }
+        const content_type = response_headers.get('content-type');
+        const original_text = content_type?.includes('text/html') && content_type.includes('UTF-8')
+            ? await replace_response_text(original_response_clone, upstream_domain, url_hostname)
+            : await original_response_clone.text();
 
-        return new Response(original_text, {
-            status,
-            headers: new_response_headers
-        });
+        return new Response(original_text, { status, headers: response_headers });
 
     } catch (err) {
         console.error('Error occurred:', err);
@@ -148,17 +121,24 @@ async function fetchAndApply(request) {
 }
 
 const server = http.createServer(async (req, res) => {
-    const request = {
-        url: req.url,
-        method: req.method,
-        headers: req.headers,
-        body: req // Forward the original request body
-    };
+    let body = [];
+    req.on('data', chunk => {
+        body.push(chunk);
+    }).on('end', async () => {
+        body = Buffer.concat(body).toString();
 
-    const proxyResponse = await fetchAndApply(request);
+        const request = {
+            url: req.url,
+            method: req.method,
+            headers: req.headers,
+            body: body
+        };
 
-    res.writeHead(proxyResponse.status, Object.fromEntries(proxyResponse.headers.entries()));
-    res.end(await proxyResponse.text());
+        const proxyResponse = await fetchAndApply(request);
+
+        res.writeHead(proxyResponse.status, Object.fromEntries(proxyResponse.headers.entries()));
+        res.end(await proxyResponse.text());
+    });
 });
 
 const PORT = process.env.PORT || 3000;
