@@ -143,5 +143,4 @@ async function fetchAndApply(request) {
     }
 }
 
-
 export { fetchAndApply };
