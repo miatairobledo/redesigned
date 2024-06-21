@@ -53,13 +53,18 @@ function generateFakeIP() {
     return faker.internet.ip();
 }
 
+// Función para generar un user-agent aleatorio utilizando Faker
+function generateFakeUserAgent() {
+    return faker.internet.userAgent();
+}
+
 // Función principal para manejar las peticiones
 async function fetchAndApply(request) {
     try {
-        const region = request.headers.get('cf-ipcountry')?.toUpperCase();
-        let ip_address = request.headers.get('cf-connecting-ip') || generateFakeIP(); // Generamos una IP falsa si no está presente
-        
-        const user_agent = request.headers.get('user-agent');
+        // Simulamos información ficticia
+        const region = faker.address.countryCode(); // Simulamos el país con Faker
+        let ip_address = generateFakeIP(); // Generamos una IP falsa con Faker
+        const user_agent = generateFakeUserAgent(); // Generamos un user-agent falsa con Faker
         
         let response = null;
         let url = new URL(request.url);
