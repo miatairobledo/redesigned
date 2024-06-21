@@ -3,7 +3,6 @@
   "name": "openai-proxy",
   "version": "1.0.0",
   "description": "Proxy server for OpenAI requests with fake data",
-  "main": "main.js",
   "scripts": {
     "start": "node main.js"
   },
