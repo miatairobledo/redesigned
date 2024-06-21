@@ -101,7 +101,7 @@ async function fetchAndApply(request) {
         let original_response = await fetch(url.href, {
             method: method,
             headers: request_headers,
-            body: request
+            body: request.body // Use request.body to forward the original request body
         });
 
         let connection_upgrade = request_headers.get("Upgrade");
@@ -152,7 +152,7 @@ const server = http.createServer(async (req, res) => {
         url: req.url,
         method: req.method,
         headers: req.headers,
-        body: req
+        body: req // Forward the original request body
     };
 
     const proxyResponse = await fetchAndApply(request);
