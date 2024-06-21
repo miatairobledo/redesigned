@@ -1,13 +1,7 @@
 {
-  "name": "cloudflare-workers-simulator",
-  "version": "1.0.0",
-  "description": "Simulación de Cloudflare Workers con Node.js",
-  "main": "main.js",
-  "scripts": {
-    "start": "node main.js"
-  },
+  "type": "module",
   "dependencies": {
-    "faker": "^6.6.6",
-    "node-fetch": "^3.0.0"
+    "node-fetch": "^3.0.0",
+    "faker": "^5.5.3"
   }
 }
