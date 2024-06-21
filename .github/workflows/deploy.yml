@@ -17,6 +17,9 @@ jobs:
         run: |
           npm install
 
+      - name: Build project
+        run: |
+          node main.js
   
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
