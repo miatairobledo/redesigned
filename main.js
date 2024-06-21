@@ -77,11 +77,16 @@ async function fetchAndApply(request) {
         request_headers.delete('apikey');
         request_headers.delete('x-api-key');
 
-        const original_response = await fetch(url.href, {
+        const options = {
             method: request.method,
-            headers: request_headers,
-            body: request.body
-        });
+            headers: request_headers
+        };
+
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+            options.body = request.body;
+        }
+
+        const original_response = await fetch(url.href, options);
 
         if (request_headers.get("Upgrade")?.toLowerCase() === "websocket") {
             return original_response;
