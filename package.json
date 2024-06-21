@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Proxy server for OpenAI requests with fake data",
   "main": "main.js",
-  "type": "module", // Aquí se especifica el tipo de módulo ES
+  "type": "module",
   "scripts": {
     "start": "node main.js"
   },
