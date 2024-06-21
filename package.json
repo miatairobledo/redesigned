@@ -7,7 +7,7 @@
     "start": "node main.js"
   },
   "dependencies": {
-    "faker": "^6.6.6", // Asegúrate de verificar la versión más reciente en npm
-    "node-fetch": "^3.0.0" // Asegúrate de verificar la versión más reciente en npm
+    "faker": "^6.6.6",
+    "node-fetch": "^3.0.0"
   }
 }
