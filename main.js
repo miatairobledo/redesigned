@@ -1,11 +1,15 @@
 import fetch from 'node-fetch';
 import faker from 'faker';
+import http from 'http';
+import https from 'https';
+import { URL } from 'url';
+
 const { Headers } = fetch;
 
 const upstream = 'api.openai.com';
 const upstream_path = '/';
 const upstream_mobile = upstream;
-const https = true;
+const httpsProtocol = true;
 const disable_cache = false;
 const replace_dict = {
     '$upstream': '$custom_domain'
@@ -70,7 +74,7 @@ async function fetchAndApply(request) {
         let url = new URL(request.url);
         let url_hostname = url.hostname;
         
-        if (https) {
+        if (httpsProtocol) {
             url.protocol = 'https:';
         } else {
             url.protocol = 'http:';
@@ -143,4 +147,21 @@ async function fetchAndApply(request) {
     }
 }
 
-export { fetchAndApply };
+const server = http.createServer(async (req, res) => {
+    const request = {
+        url: req.url,
+        method: req.method,
+        headers: req.headers,
+        body: req
+    };
+
+    const proxyResponse = await fetchAndApply(request);
+    
+    res.writeHead(proxyResponse.status, Object.fromEntries(proxyResponse.headers.entries()));
+    res.end(await proxyResponse.text());
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Proxy server is running on port ${PORT}`);
+});
