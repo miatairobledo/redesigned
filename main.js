@@ -5,7 +5,7 @@ import { URL } from 'url';
 import https from 'https';
 
 const upstream = 'api.openai.com';
-const upstream_path = '/v1';  // Ajustar según la API de OpenAI que se use
+const upstream_path = '/';  // Ajustar según la API de OpenAI que se use
 const upstream_mobile = upstream;
 const httpsProtocol = true;
 const disable_cache = false;
@@ -114,9 +114,13 @@ async function fetchAndApply(request, bypass = false) {
         }
 
         const content_type = response_headers.get('content-type');
-        const original_text = content_type?.includes('text/html') && content_type.includes('UTF-8')
-            ? await replace_response_text(original_response, upstream_domain, url_hostname)
-            : await original_response.text();
+        let original_text = '';
+
+        if (content_type?.includes('text/html') && content_type.includes('UTF-8')) {
+            original_text = await replace_response_text(original_response, upstream_domain, url_hostname);
+        } else {
+            original_text = await original_response.text();
+        }
 
         if ((original_text.includes('insufficient_quota') || original_text.includes('rate_limit_exceeded')) && !bypass) {
             // Retry the request with bypass flag set to true
@@ -136,6 +140,20 @@ async function fetchAndApply(request, bypass = false) {
 }
 
 const server = http.createServer(async (req, res) => {
+    if (req.method === 'CONNECT') {
+        const [host, port] = req.url.split(':');
+        const clientSocket = net.connect(port, host, () => {
+            res.writeHead(200, { 'Connection': 'Established' });
+            res.pipe(clientSocket).pipe(res);
+        });
+        clientSocket.on('error', (err) => {
+            console.error('Error occurred in CONNECT request:', err);
+            res.writeHead(500);
+            res.end('Internal Server Error');
+        });
+        return;
+    }
+
     let body = [];
     req.on('data', chunk => {
         body.push(chunk);
