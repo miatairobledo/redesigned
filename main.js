@@ -1,9 +1,7 @@
-// Importamos lo necesario para Node.js
 import fetch from 'node-fetch';
 import faker from 'faker';
 const { Headers } = fetch;
 
-// Constantes comunes para todos los bloques de código
 const upstream = 'api.openai.com';
 const upstream_path = '/';
 const upstream_mobile = upstream;
@@ -15,7 +13,6 @@ const replace_dict = {
     '$upstream': '$custom_domain'
 };
 
-// Función para determinar el tipo de dispositivo basado en el user-agent
 async function device_status(user_agent_info) {
     var agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
     var flag = true;
@@ -28,7 +25,6 @@ async function device_status(user_agent_info) {
     return flag;
 }
 
-// Función para reemplazar texto en la respuesta
 async function replace_response_text(response, upstream_domain, host_name) {
     let text = await response.text();
     for (let i in replace_dict) {
@@ -48,23 +44,24 @@ async function replace_response_text(response, upstream_domain, host_name) {
     return text;
 }
 
-// Función para generar IP falsa utilizando Faker
 function generateFakeIP() {
     return faker.internet.ip();
 }
 
-// Función para generar un user-agent aleatorio utilizando Faker
 function generateFakeUserAgent() {
     return faker.internet.userAgent();
 }
 
-// Función principal para manejar las peticiones
+function generateFakeGeolocation() {
+    return `${faker.address.latitude()}, ${faker.address.longitude()}`;
+}
+
 async function fetchAndApply(request) {
     try {
-        // Simulamos información ficticia
-        const region = faker.address.countryCode(); // Simulamos el país con Faker
-        let ip_address = generateFakeIP(); // Generamos una IP falsa con Faker
-        const user_agent = generateFakeUserAgent(); // Generamos un user-agent falsa con Faker
+        const region = faker.address.countryCode();
+        let ip_address = generateFakeIP();
+        const user_agent = generateFakeUserAgent();
+        const geolocation = generateFakeGeolocation();
         
         let response = null;
         let url = new URL(request.url);
@@ -92,6 +89,15 @@ async function fetchAndApply(request) {
             request_headers.set('Host', upstream_domain);
             request_headers.set('Referer', `${url.protocol}//${url_hostname}`);
             
+            request_headers.delete('Authorization');
+            request_headers.delete('apikey');
+            request_headers.delete('x-api-key');
+            
+            request_headers.set('cf-ipcountry', region);
+            request_headers.set('cf-ip-geo', geolocation);
+            
+            request_headers.set('cf-connecting-ip', ip_address);
+            
             let original_response = await fetch(url.href, {
                 method: method,
                 headers: request_headers,
@@ -114,7 +120,7 @@ async function fetchAndApply(request) {
             }
             
             new_response_headers.set('access-control-allow-origin', '*');
-            new_response_headers.set('access-control-allow-credentials', 'true'); // Cambiado a string 'true'
+            new_response_headers.set('access-control-allow-credentials', 'true');
             new_response_headers.delete('content-security-policy');
             new_response_headers.delete('content-security-policy-report-only');
             new_response_headers.delete('clear-site-data');
@@ -142,5 +148,8 @@ async function fetchAndApply(request) {
     }
 }
 
-// Exportamos la función fetchAndApply para poder ser llamada externamente si es necesario
+addEventListener('fetch', event => {
+    event.respondWith(fetchAndApply(event.request));
+});
+
 export { fetchAndApply };
