@@ -77,6 +77,10 @@ async function fetchAndApply(request, bypass = false) {
         request_headers.set('Geolocation', geolocation);
         request_headers.set('Date', fake_time);
 
+        request_headers.delete('Authorization');
+        request_headers.delete('apikey');
+        request_headers.delete('x-api-key');
+
         const options = {
             method: request.method,
             headers: request_headers,
