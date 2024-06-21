@@ -136,12 +136,11 @@ async function fetchAndApply(request) {
             original_text = await original_response_clone.text();
         }
 
-        response = new Response(original_text, {
+        return new Response(original_text, {
             status,
             headers: new_response_headers
         });
 
-        return response;
     } catch (err) {
         console.error('Error occurred:', err);
         return new Response('Internal Server Error', { status: 500 });
