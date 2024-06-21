@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
