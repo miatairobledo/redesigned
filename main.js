@@ -5,7 +5,7 @@ import { URL } from 'url';
 import https from 'https';
 
 const upstream = 'api.openai.com';
-const upstream_path = '/';
+const upstream_path = '/v1';  // Ajustar según la API de OpenAI que se use
 const upstream_mobile = upstream;
 const httpsProtocol = true;
 const disable_cache = false;
