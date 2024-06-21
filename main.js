@@ -137,7 +137,5 @@ async function fetchAndApply(request) {
     }
 }
 
-// Agregamos el listener para manejar las solicitudes entrantes
-addEventListener('fetch', event => {
-    event.respondWith(fetchAndApply(event.request));
-});
+// Exportamos la función fetchAndApply para poder ser llamada externamente si es necesario
+export { fetchAndApply };
