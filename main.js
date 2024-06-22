@@ -6,7 +6,7 @@ import https from 'https';
 import net from 'net';
 
 const upstream = 'api.openai.com';
-const upstream_path = '';  // Ajustar según la API de OpenAI que se use
+const upstream_path = '';  // Adjust according to the specific OpenAI API path you need
 const upstream_mobile = upstream;
 const httpsProtocol = true;
 const disable_cache = false;
@@ -123,7 +123,7 @@ async function fetchAndApply(request, bypass = false) {
             original_text = await original_response.text();
         }
 
-        // Manejo de errores específicos con bypass
+        // Handle specific errors with bypass
         if ((original_text.includes('insufficient_quota') || 
              original_text.includes('rate_limit_exceeded') || 
              original_text.includes('invalid_request_error') || 
