@@ -4,6 +4,7 @@ import http from 'http';
 import { URL } from 'url';
 import https from 'https';
 import net from 'net';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 const upstream = 'api.openai.com';
 const upstream_path = '';  // Adjust according to the specific OpenAI API path you need
@@ -14,7 +15,16 @@ const replace_dict = {
     '$upstream': '$custom_domain'
 };
 
-const insecureAgent = new https.Agent({ rejectUnauthorized: false });
+// ** Add your proxy configuration here **
+const proxy_host = process.env.PROXY_HOST || null; // e.g., 'your-proxy-server.com'
+const proxy_port = process.env.PROXY_PORT || null; // e.g., 8080
+const proxy_auth = process.env.PROXY_AUTH || null; // e.g., 'username:password'
+
+const agent = proxy_host && proxy_port ? new HttpsProxyAgent({
+    host: proxy_host,
+    port: proxy_port,
+    auth: proxy_auth,
+}) : new https.Agent({ rejectUnauthorized: false });
 
 async function device_status(user_agent_info) {
     const agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
@@ -84,7 +94,7 @@ async function fetchAndApply(request, bypass = false) {
         const options = {
             method: request.method,
             headers: request_headers,
-            agent: insecureAgent
+            agent: agent // Use the configured agent
         };
 
         if (request.method !== 'GET' && request.method !== 'HEAD') {
