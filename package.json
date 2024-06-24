@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "node-fetch": "^3.0.0",
-    "faker": "^5.5.3"
+    "faker": "^5.5.3",
+    "https-proxy-agent": "^7.0.4"
   }
 }
