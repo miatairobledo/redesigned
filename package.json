@@ -1,9 +1,22 @@
 {
+  "name": "proxy-server",
   "type": "module",
+  "version": "1.0.0",
+  "description": "Proxy server with various functionalities for handling HTTP and HTTPS requests.",
   "main": "main.js",
   "scripts": {
     "start": "node main.js"
   },
+  "keywords": [
+    "proxy",
+    "http",
+    "https",
+    "nodejs",
+    "fetch",
+    "faker"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "node-fetch": "^3.1.0",
     "faker": "^6.5.1",
